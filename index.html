@@ -55,8 +55,10 @@
     async function fetchAssets() {
       const loadingEl = document.getElementById('loading');
       const listEl = document.getElementById('asset-list');
+
       try {
-        const res = await fetch('/api/assets?start=113800&end=113810');
+        // Adjust the range here as you like
+        const res = await fetch('/api/assets?start=113800&end=114000');
         if (!res.ok) throw new Error('Network error');
 
         const data = await res.json();

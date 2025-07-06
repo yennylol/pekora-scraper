@@ -1,8 +1,12 @@
 import fetch from 'node-fetch';
 import cheerio from 'cheerio';
 
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export default async function handler(req, res) {
-  const { start = '113800', end = '113810' } = req.query;
+  const { start = '113800', end = '114000' } = req.query;
 
   const startId = parseInt(start, 10);
   const endId = parseInt(end, 10);
@@ -12,21 +16,30 @@ export default async function handler(req, res) {
   }
 
   const assets = [];
-  const maxRequests = Math.min(endId - startId + 1, 10); // limit to 10 requests
+  let consecutiveMisses = 0;
+  const maxMisses = 5;
+  const delayMs = 300;
 
-  for (let id = startId; id < startId + maxRequests; id++) {
+  for (let id = startId; id <= endId; id++) {
     const url = `https://www.pekora.zip/catalog/${id}`;
 
     try {
       const response = await fetch(url);
-      if (!response.ok) continue;
+      if (!response.ok) {
+        consecutiveMisses++;
+        if (consecutiveMisses >= maxMisses) break;
+        await delay(delayMs);
+        continue;
+      }
+
+      consecutiveMisses = 0;
 
       const html = await response.text();
-
       const $ = cheerio.load(html);
+
       const title = $('h1').first().text().trim() || `Asset #${id}`;
 
-      // Adjust selector below after inspecting Pekora's asset page for date or sales info
+      // Replace with actual selector if you find the date on asset page
       const dateText = $('span.asset-creation-date').text().trim() || '';
 
       assets.push({
@@ -35,13 +48,16 @@ export default async function handler(req, res) {
         title,
         date: dateText,
       });
-    } catch (error) {
+
+      await delay(delayMs);
+    } catch {
+      consecutiveMisses++;
+      if (consecutiveMisses >= maxMisses) break;
+      await delay(delayMs);
       continue;
     }
   }
 
-  // Cache for 1 minute to avoid too many scrapes
   res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate');
-
   res.status(200).json({ assets });
 }
