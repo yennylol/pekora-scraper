@@ -21,7 +21,7 @@ export default async function handler(req, res) {
   const delayMs = 300;
 
   for (let id = startId; id <= endId; id++) {
-    const url = `https://www.pekora.zip/catalog/${id}`;
+    const url = `https://www.pekora.zip/catalog/${id}/-`;
 
     try {
       const response = await fetch(url);
