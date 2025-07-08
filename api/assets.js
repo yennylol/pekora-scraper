@@ -21,7 +21,8 @@ export default async function handler(req, res) {
   const delayMs = 300;
 
   for (let id = startId; id <= endId; id++) {
-    const url = `https://www.pekora.zip/catalog/${id}/-`;
+const url = `https://www.pekora.zip/catalog/${id}/-`;
+
 
     try {
       const response = await fetch(url);
@@ -41,13 +42,13 @@ export default async function handler(req, res) {
 
       // Replace with actual selector if you find the date on asset page
       const dateText = $('span.asset-creation-date').text().trim() || '';
+assets.push({
+  id,
+  url: response.url, // final URL after redirect
+  title,
+  date: dateText,
+});
 
-      assets.push({
-        id,
-        url,
-        title,
-        date: dateText,
-      });
 
       await delay(delayMs);
     } catch {
